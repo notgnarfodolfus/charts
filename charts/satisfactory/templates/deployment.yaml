@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "satisfactory.fullname" . }}
+  labels:
+    {{- include "satisfactory.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "satisfactory.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "satisfactory.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "satisfactory.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: copy-config
+          image: busybox
+          command: [ 'sh', '-c', 'cp /configs/*.ini /etc/config-copies/' ]
+          volumeMounts:
+            - name: config-files
+              mountPath: /configs
+            - name: config-copies
+              mountPath: /etc/config-copies
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: MAXPLAYERS
+              value: {{ .Values.config.maxPlayers | quote }}
+            - name: STEAMBETA
+              value: {{ .Values.config.steamBeta | quote }}
+            - name: SKIPUPDATE
+              value: {{ .Values.config.skipUpdate | quote }}
+            - name: SERVERGAMEPORT
+              value: {{ .Values.service.gamePort | quote }}
+            - name: SERVERBEACONPORT
+              value: {{ .Values.service.beaconPort | quote }}
+            - name: SERVERQUERYPORT
+              value: {{ .Values.service.queryPort | quote }}
+          ports:
+            - name: game
+              containerPort: {{ .Values.service.gamePort }}
+              protocol: UDP
+            - name: beacon
+              containerPort: {{ .Values.service.beaconPort }}
+              protocol: UDP
+            - name: query
+              containerPort: {{ .Values.service.queryPort }}
+              protocol: UDP
+          volumeMounts:
+            - name: config-copies
+              mountPath: /home/steam/Engine.ini
+              subPath: Engine.ini
+            - name: config-copies
+              mountPath: /home/steam/Game.ini
+              subPath: Game.ini
+            - name: config-copies
+              mountPath: /home/steam/GameUserSettings.ini
+              subPath: GameUserSettings.ini
+            - name: config-copies
+              mountPath: /home/steam/ServerSettings.ini
+              subPath: ServerSettings.ini
+            # - name: satisfactory-data
+            #   mountPath: /config
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config-copies
+          emptyDir: {}
+        - name: config-files
+          configMap:
+            name: {{ include "satisfactory.fullname" . | quote }}
+        # - name: satisfactory-data
+        #   persistentVolumeClaim:
+        #     claimName: {{ .Values.persistence.existingClaim | default (include "satisfactory.fullname" .) | quote }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

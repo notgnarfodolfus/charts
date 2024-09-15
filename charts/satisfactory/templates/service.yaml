@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "satisfactory.fullname" . }}
+  labels:
+    {{- include "satisfactory.labels" . | nindent 4 }}
+spec:
+  type: LoadBalancer
+  ports:
+    - name: game
+      targetPort: game
+      protocol: UDP
+      port: {{ .Values.service.gamePort }}
+    - name: beacon
+      targetPort: beacon
+      protocol: UDP
+      port: {{ .Values.service.beaconPort }}
+    - name: query
+      targetPort: query
+      protocol: UDP
+      port: {{ .Values.service.queryPort }}
+  selector:
+    {{- include "satisfactory.selectorLabels" . | nindent 4 }}

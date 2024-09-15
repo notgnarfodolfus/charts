@@ -1,0 +1,31 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ template "satisfactory.fullname" . }}
+  labels: {{- include "satisfactory.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  Engine.ini: |-
+    [/Script/SocketSubsystemEpic.EpicNetDriver]
+    MaxClientRate=120000
+    MaxInternetClientRate=120000
+
+    [/Script/FactoryGame.FGSaveSession]
+    mNumRotatingAutosaves={{ .Values.config.autosaveCount }}
+
+    [CrashReportClient]
+    bImplicitSend={{ if .Values.config.crashReport }}True{{else}}False{{end}}
+  Game.ini: |-
+    [/Script/Engine.GameSession]
+    MaxPlayers={{ .Values.config.maxPlayers }}
+
+  GameUserSettings.ini: |-
+    [/Script/FactoryGame.FGGameUserSettings]
+    mFloatValues=(("FG.AutosaveInterval", {{ .Values.config.autosaveInterval }}))
+    mIntValues=(("FG.DisableSeasonalEvents", {{ if .Values.config.seasonalEvents }}0{{else}}1{{end}}))
+    mNetworkQuality={{ .Values.config.networkQuality }}
+
+  ServerSettings.ini: |-
+    [/Script/FactoryGame.FGServerSubsystem]
+    mAutoPause={{ if .Values.config.autoPause }}True{{else}}False{{end}}
+    mAutoSaveOnDisconnect={{ if .Values.config.saveOnDisconnect }}True{{else}}False{{end}}

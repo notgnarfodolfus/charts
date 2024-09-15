@@ -1,0 +1,14 @@
+apiVersion: v2
+name: satisfactory
+description: Deploy a satisfactory server
+type: application
+version: 0.1.0
+appVersion: 1.8.5
+keywords:
+  - game
+  - server
+  - satisfactory
+sources:
+  - https://www.satisfactorygame.com/
+  - https://github.com/wolveix/satisfactory-server
+  - https://github.com/notgnarfodolfus/charts

@@ -35,6 +35,8 @@ spec:
           env:
             - name: MAXPLAYERS
               value: {{ .Values.config.maxPlayers | quote }}
+            - name: DEBUG
+              value: {{ .Values.config.debug | quote }}
             - name: STEAMBETA
               value: {{ .Values.config.steamBeta | quote }}
             - name: SKIPUPDATE
@@ -45,10 +47,17 @@ spec:
               value: {{ .Values.service.beaconPort | quote }}
             - name: SERVERQUERYPORT
               value: {{ .Values.service.queryPort | quote }}
+            - name: PGID
+              value: "1000"
+            - name: PUID
+              value: "1000"
           ports:
-            - name: game
+            - name: udp
               containerPort: {{ .Values.service.gamePort }}
               protocol: UDP
+            - name: tcp
+              containerPort: {{ .Values.service.gamePort }}
+              protocol: TCP
             - name: beacon
               containerPort: {{ .Values.service.beaconPort }}
               protocol: UDP
@@ -82,9 +91,11 @@ spec:
         - name: config-files
           configMap:
             name: {{ include "satisfactory.fullname" . | quote }}
-        # - name: satisfactory-data
-        #   persistentVolumeClaim:
-        #     claimName: {{ .Values.persistence.existingClaim | default (include "satisfactory.fullname" .) | quote }}
+        {{- if .Values.persistence.enabled }}
+        - name: satisfactory-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "satisfactory.fullname" .) | quote }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

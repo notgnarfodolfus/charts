@@ -5,19 +5,15 @@ metadata:
   labels:
     {{- include "satisfactory.labels" . | nindent 4 }}
 spec:
-  type: LoadBalancer
+  type: NodePort
   ports:
-    - name: game
-      targetPort: game
+    - name: udp
       protocol: UDP
       port: {{ .Values.service.gamePort }}
-    - name: beacon
-      targetPort: beacon
-      protocol: UDP
-      port: {{ .Values.service.beaconPort }}
-    - name: query
-      targetPort: query
-      protocol: UDP
-      port: {{ .Values.service.queryPort }}
+      nodePort: {{ .Values.service.gamePort }}
+    - name: tcp
+      protocol: TCP
+      port: {{ .Values.service.gamePort }}
+      nodePort: {{ .Values.service.gamePort }}
   selector:
     {{- include "satisfactory.selectorLabels" . | nindent 4 }}
